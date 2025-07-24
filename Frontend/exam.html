@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Exam Page</title>
+</head>
+<body>
+  <h1>Exam in Progress...</h1>
+
+  <form id="examForm">
+    <p>1. What is 2 + 2?</p>
+    <label><input type="radio" name="q1" value="4"> 4</label><br>
+    <label><input type="radio" name="q1" value="5"> 5</label><br>
+
+    <p>2. Capital of France?</p>
+    <label><input type="radio" name="q2" value="Paris"> Paris</label><br>
+    <label><input type="radio" name="q2" value="London"> London</label><br>
+
+    <p>3. JavaScript runs on?</p>
+    <label><input type="radio" name="q3" value="Browser"> Browser</label><br>
+    <label><input type="radio" name="q3" value="Washing Machine"> Washing Machine</label><br>
+  </form>
+
+  <br>
+  <button id="end">End Exam</button>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    function getAnswers() {
+      const correctAnswers = {
+        q1: '4',
+        q2: 'Paris',
+        q3: 'Browser'
+      };
+
+      let score = 0;
+      let total = 3;
+
+      Object.keys(correctAnswers).forEach(q => {
+        const selected = document.querySelector(`input[name="${q}"]:checked`);
+        if (selected && selected.value === correctAnswers[q]) {
+          score++;
+        }
+      });
+
+      return { score, total };
+    }
+
+    function submitExam(autoSubmitted = false) {
+      const result = getAnswers();
+      result.autoSubmitted = autoSubmitted;
+      ipcRenderer.send('exam-result', result);
+    }
+
+    document.getElementById('end').addEventListener('click', () => {
+      submitExam(false);
+    });
+
+    ipcRenderer.on('auto-submit', () => {
+      submitExam(true);
+    });
+
+    // Block right-click
+    document.addEventListener('contextmenu', e => e.preventDefault());
+  </script>
+</body>
+</html>

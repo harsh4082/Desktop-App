@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Exam App - Home</title>
+</head>
+<body>
+  <h1>Welcome to the Exam Portal</h1>
+  <button id="start">Start Exam</button>
+  <p id="message"></p>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    document.getElementById('start').addEventListener('click', () => {
+      document.getElementById('message').textContent = "";
+      ipcRenderer.send('start-exam');
+    });
+
+    ipcRenderer.on('show-result', (event, result) => {
+      if (result.autoSubmitted) {
+        document.getElementById('message').textContent =
+          `❌ You tried to leave the exam! Your exam has been auto-submitted.\nYour score: ${result.score} / ${result.total}`;
+      } else {
+        document.getElementById('message').textContent =
+          `✅ Congratulations! Your score is: ${result.score} / ${result.total}\nResult will be announced soon.`;
+      }
+    });
+  </script>
+</body>
+</html>
