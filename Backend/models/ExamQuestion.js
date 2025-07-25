@@ -1,21 +1,41 @@
 const mongoose = require('mongoose');
 
+// 🔹 Generate custom ID like "QST-123456" or "EXM-123456"
+const generateCustomId = (prefix = 'ID') => {
+  const random = Math.floor(100000 + Math.random() * 900000);
+  return `${prefix}-${random}`;
+};
+
+// 🔸 Answer Options Schema
 const answerOptionSchema = new mongoose.Schema({
-  id: { type: String, required: true }, // Unique identifier for answer (like UUID or "A", "B", etc.)
+  id: { type: String, required: true }, // "A", "B", "C" etc.
   text: { type: String, required: true },
 });
 
+// 🔸 Individual Question Schema (includes set info)
 const questionSchema = new mongoose.Schema({
+  questionId: { type: String, default: () => generateCustomId('QST'), unique: true },
   questionText: { type: String, required: true },
-  answerOptions: [answerOptionSchema], // All options
-  correctAnswerId: { type: String, required: true }, // ID must match one from answerOptions
+  answerOptions: [answerOptionSchema],
+  correctAnswerId: { type: String, required: true },
+  score: { type: Number, default: 1 },
+  set: { type: String, required: true },
+  setIndex: { type: Number } // 👈 Index of the question within its set
 });
 
+// 🔸 Main Exam Question Set Schema
 const examQuestionSchema = new mongoose.Schema({
-  subject: { type: mongoose.Schema.Types.ObjectId, ref: 'Subject' },
-  class: { type: String, enum: ['FY', 'SY', 'TY'], required: true },
-  set: { type: String }, // e.g., "Set 1"
+  examId: { type: String, unique: true, default: () => generateCustomId('EXM') }, // 👈 New examId
+  subjectId: { type: String, required: true },
+  class: { type: String, required: true },
   questions: [questionSchema],
+  totalQuestions: { type: Number, default: 0 }
+});
+
+// 🔸 Auto-count total questions
+examQuestionSchema.pre('save', function (next) {
+  this.totalQuestions = this.questions.length;
+  next();
 });
 
 module.exports = mongoose.model('ExamQuestion', examQuestionSchema);

@@ -14,6 +14,7 @@ connectDB();
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/dept', require('./routes/department'));
 app.use('/api/subject', require('./routes/subject'));
+app.use('/api/exams', require('./routes/examQuestion'));
 
 
 app.get('/api/hello', (req, res) => {
