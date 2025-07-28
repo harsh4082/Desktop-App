@@ -80,12 +80,13 @@ router.post('/add-multiple', async (req, res) => {
 });
 
 // 🔹 Add an exam to a student by email
-router.post('/add-exam-by-email', async (req, res) => {
+router.post('/add-exam-by-emails', async (req, res) => {
   try {
-    const { email, subjectId, status } = req.body;
+    const { emails, subjectId } = req.body;
 
-    if (!email || !subjectId) {
-      return res.status(400).json({ message: 'Email and subjectId are required' });
+    // 🔍 Validate input
+    if (!Array.isArray(emails) || emails.length === 0 || !subjectId) {
+      return res.status(400).json({ message: 'Emails (array) and subjectId are required' });
     }
 
     // 🔍 Validate subject existence and status
@@ -98,43 +99,108 @@ router.post('/add-exam-by-email', async (req, res) => {
       return res.status(400).json({ message: `Subject ${subjectId} is not active` });
     }
 
-    // 🔍 Find student by email
-    const student = await Student.findOne({ email });
-    if (!student) {
-      return res.status(404).json({ message: 'Student not found' });
-    }
-
-    // ❌ Prevent duplicate subjectId for this student
-    const alreadyExists = student.exams.some(exam => exam.subjectId === subjectId);
-    if (alreadyExists) {
-      return res.status(409).json({ message: `Subject ${subjectId} already added for this student` });
-    }
-
-    // ✅ Create new exam object
-    const newExam = {
-      subjectId,
-      examStartTime: null,
-      examEndTime: null,
-      status: status || 'pending',
-      selectedAnswers: [],
-      score: 0,
-      totalScore: 0,
+    const results = {
+      success: [],
+      alreadyExists: [],
+      notFound: [],
+      failed: [],
     };
 
-    student.exams.push(newExam);
-    await student.save();
+    // 🔄 Loop through each email
+    for (const email of emails) {
+      try {
+        const student = await Student.findOne({ email });
+        if (!student) {
+          results.notFound.push(email);
+          continue;
+        }
 
+        const alreadyHasExam = student.exams.some(exam => exam.subjectId === subjectId);
+        if (alreadyHasExam) {
+          results.alreadyExists.push(email);
+          continue;
+        }
+
+        // ✅ Create new exam object
+        const newExam = {
+          subjectId,
+          examStartTime: null,
+          examEndTime: null,
+          set: null,
+          status: 'pending', // ← hardcoded
+          selectedAnswers: [],
+          score: 0,
+          totalScore: 0,
+        };
+
+        student.exams.push(newExam);
+        await student.save();
+        results.success.push(email);
+      } catch (err) {
+        results.failed.push(email);
+        console.error(`❌ Failed to add exam for ${email}:`, err.message);
+      }
+    }
+
+    // ✅ Final response
     res.status(200).json({
-      message: 'Exam added to student successfully',
-      studentId: student.studentId,
-      exams: student.exams,
+      message: 'Exam assignment process completed',
+      subjectId,
+      resultSummary: results,
     });
 
   } catch (error) {
-    console.error('Error adding exam:', error);
-    res.status(500).json({ message: 'Internal server error', error });
+    console.error('🔥 Bulk add exam error:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
+
+
+
+router.post('/assign-set', async (req, res) => {
+  try {
+    const { subjectId, set, studentIds } = req.body;
+
+    if (!subjectId || !set || !Array.isArray(studentIds) || studentIds.length === 0) {
+      return res.status(400).json({
+        message: 'subjectId, set, and studentIds[] are required',
+      });
+    }
+
+    const updatedStudents = [];
+
+    for (const studentId of studentIds) {
+      const student = await Student.findOne({ studentId });
+      if (!student) {
+        continue; // Skip if student not found
+      }
+
+      const exam = student.exams.find(e => e.subjectId === subjectId);
+      if (!exam) {
+        continue; // Skip if exam for subject not found
+      }
+
+      exam.set = set; // ✅ Assign set
+
+      await student.save();
+      updatedStudents.push({ studentId: student.studentId, setAssigned: set });
+    }
+
+    if (updatedStudents.length === 0) {
+      return res.status(404).json({ message: 'No matching students or exams found to update.' });
+    }
+
+    res.status(200).json({
+      message: `Set assigned to ${updatedStudents.length} students`,
+      updated: updatedStudents,
+    });
+
+  } catch (err) {
+    console.error('Error assigning set:', err);
+    res.status(500).json({ message: 'Internal server error', error: err.message });
+  }
+});
+
 
 router.post('/submit-exam', async (req, res) => {
   try {
@@ -149,7 +215,6 @@ router.post('/submit-exam', async (req, res) => {
       return res.status(404).json({ message: 'Student not found' });
     }
 
-    // Find the student's exam entry
     const studentExam = student.exams.find(e => e.subjectId === subjectId);
     if (!studentExam) {
       return res.status(400).json({ message: `No exam found for subject ${subjectId}` });
@@ -159,15 +224,23 @@ router.post('/submit-exam', async (req, res) => {
       return res.status(400).json({ message: `Exam for subject ${subjectId} already submitted` });
     }
 
-    // Fetch questions for the subject
     const examData = await ExamQuestion.findOne({ subjectId });
     if (!examData) {
       return res.status(404).json({ message: 'No questions found for this subject' });
     }
 
-    const allQuestionsMap = {};
-    for (const q of examData.questions) {
-      allQuestionsMap[q.questionId] = q;
+    const studentSet = studentExam.set;
+    if (!studentSet) {
+      return res.status(400).json({ message: 'Set not assigned to this student for this subject' });
+    }
+
+    // ✅ Filter questions by student's set
+    const questionsForSet = examData.questions.filter(q => q.set === studentSet);
+
+    // Map questions by ID for quick lookup
+    const questionMap = {};
+    for (const q of questionsForSet) {
+      questionMap[q.questionId] = q;
     }
 
     const updatedAnswers = [];
@@ -175,15 +248,14 @@ router.post('/submit-exam', async (req, res) => {
 
     for (const answer of selectedAnswers) {
       const { questionId, selectedAnswerId } = answer;
-      const question = allQuestionsMap[questionId];
+      const question = questionMap[questionId];
 
       if (!question) {
-        return res.status(400).json({ message: `Invalid questionId: ${questionId}` });
+        return res.status(400).json({ message: `Invalid or non-matching questionId: ${questionId} for set: ${studentSet}` });
       }
 
       const isCorrect = question.correctAnswerId === selectedAnswerId;
       const score = isCorrect ? question.score : 0;
-
       totalScore += score;
 
       updatedAnswers.push({
@@ -194,13 +266,16 @@ router.post('/submit-exam', async (req, res) => {
       });
     }
 
-    // Update the exam record
+    // Calculate total possible score from the set only
+    const totalPossibleScore = questionsForSet.reduce((sum, q) => sum + q.score, 0);
+
+    // Update exam
     studentExam.selectedAnswers = updatedAnswers;
-    studentExam.examStartTime = studentExam.examStartTime || new Date(); // Use existing if already started
+    studentExam.examStartTime = studentExam.examStartTime || new Date();
     studentExam.examEndTime = new Date();
     studentExam.status = 'submitted';
     studentExam.score = totalScore;
-    studentExam.totalScore = examData.questions.reduce((sum, q) => sum + q.score, 0);
+    studentExam.totalScore = totalPossibleScore;
 
     await student.save();
 
@@ -208,6 +283,7 @@ router.post('/submit-exam', async (req, res) => {
       message: 'Exam submitted successfully',
       studentId: student.studentId,
       subjectId,
+      set: studentSet,
       score: studentExam.score,
       totalScore: studentExam.totalScore,
       status: studentExam.status,
@@ -216,6 +292,94 @@ router.post('/submit-exam', async (req, res) => {
   } catch (err) {
     console.error('Submit exam error:', err);
     res.status(500).json({ message: 'Internal server error', error: err.message });
+  }
+});
+
+// GET /students/basic
+router.get('/basic', async (req, res) => {
+  try {
+    const students = await Student.find({}, {
+      studentId: 1,
+      name: 1,
+      email: 1,
+      phone: 1,
+      rollNo: 1,
+      departmentId: 1,
+      class: 1,
+      _id: 0
+    });
+
+    res.status(200).json(students);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// GET /students/basic/filter?departmentId=DEP-123456&class=FY
+router.get('/basic/filter', async (req, res) => {
+  try {
+    const { departmentId, class: className } = req.query;
+
+    if (!departmentId || !className) {
+      return res.status(400).json({ message: 'departmentId and class are required' });
+    }
+
+    const students = await Student.find(
+      { departmentId, class: className },
+      {
+        studentId: 1,
+        name: 1,
+        email: 1,
+        phone: 1,
+        rollNo: 1,
+        departmentId: 1,
+        class: 1,
+        _id: 0
+      }
+    );
+
+    res.status(200).json(students);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+
+// GET /students/full/filter?departmentId=DEP-123456&class=FY
+router.get('/full/filter', async (req, res) => {
+  try {
+    const { departmentId, class: className } = req.query;
+
+    if (!departmentId || !className) {
+      return res.status(400).json({ message: 'departmentId and class are required' });
+    }
+
+    const students = await Student.find({ departmentId, class: className });
+
+    res.status(200).json(students);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// GET /students/full/by-subject?departmentId=DEP-123456&class=FY&subjectId=SUB-999999
+router.get('/full/by-subject', async (req, res) => {
+  try {
+    const { departmentId, class: className, subjectId } = req.query;
+
+    if (!departmentId || !className || !subjectId) {
+      return res.status(400).json({ message: 'departmentId, class, and subjectId are required' });
+    }
+
+    const students = await Student.find({
+      departmentId,
+      class: className,
+      exams: { $elemMatch: { subjectId } }
+    });
+
+    res.status(200).json(students);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 
