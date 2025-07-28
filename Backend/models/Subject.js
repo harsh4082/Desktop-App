@@ -12,6 +12,7 @@ const subjectSchema = new mongoose.Schema({
     default: () => `SUB-${Math.floor(100000 + Math.random() * 900000)}`,
     unique: true,
   },
+  status : {type: String} ,
   name: { type: String, required: true },
   class: { type: String, required: true }, // removed enum
   teacherName: { type: String },

@@ -15,7 +15,7 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api/dept', require('./routes/department'));
 app.use('/api/subject', require('./routes/subject'));
 app.use('/api/exams', require('./routes/examQuestion'));
-
+app.use('/api/students', require('./routes/student'));
 
 app.get('/api/hello', (req, res) => {
   res.json({ message: 'Hello from server' });

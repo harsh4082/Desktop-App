@@ -9,46 +9,111 @@ const getTotalStudentsFromSets = (sets) => {
   
 
 router.post('/create', async (req, res) => {
-    try {
-      let { name, class: subjectClass, teacherName, departmentId, sets, totalStudents, autoCalculate } = req.body;
-  
-      // ✅ Check for duplicate set names
-      const setNames = sets.map(set => set.name.trim().toLowerCase());
-      const hasDuplicateSetNames = new Set(setNames).size !== setNames.length;
-  
-      if (hasDuplicateSetNames) {
-        return res.status(400).json({
-          error: 'Duplicate set names are not allowed. Each set must have a unique name.'
-        });
-      }
-  
-      // ✅ Check sum of students in sets
-      const sumOfSetStudents = getTotalStudentsFromSets(sets);
-  
-      if (autoCalculate) {
-        totalStudents = sumOfSetStudents;
-      } else if (sumOfSetStudents !== totalStudents) {
-        return res.status(400).json({
-          error: `Total students (${totalStudents}) must equal sum of students in all sets (${sumOfSetStudents}).`
-        });
-      }
-  
-      const newSubject = new Subject({
-        name,
-        class: subjectClass,
-        teacherName,
-        departmentId,
-        totalStudents,
-        sets
+  try {
+    let {
+      name,
+      class: subjectClass,
+      teacherName,
+      departmentId,
+      sets = [],
+      totalStudents,
+      autoCalculate,
+    } = req.body;
+
+    // ✅ Check for duplicate set names
+    const setNames = sets.map(set => set.name.trim().toLowerCase());
+    const hasDuplicateSetNames = new Set(setNames).size !== setNames.length;
+
+    if (hasDuplicateSetNames) {
+      return res.status(400).json({
+        error: 'Duplicate set names are not allowed. Each set must have a unique name.'
       });
-  
-      await newSubject.save();
-      res.status(201).json({ message: 'Subject created', subject: newSubject });
-  
-    } catch (err) {
-      res.status(500).json({ error: 'Server error', details: err.message });
     }
+
+    // ✅ Calculate or validate totalStudents
+    const sumOfSetStudents = getTotalStudentsFromSets(sets);
+
+    if (autoCalculate) {
+      totalStudents = sumOfSetStudents;
+    } else if (sumOfSetStudents !== totalStudents) {
+      return res.status(400).json({
+        error: `Total students (${totalStudents}) must equal sum of students in all sets (${sumOfSetStudents}).`
+      });
+    }
+
+    const newSubject = new Subject({
+      name,
+      class: subjectClass,
+      teacherName,
+      departmentId,
+      totalStudents,
+      sets,
+      status: 'x', // 🟡 Default status
+    });
+
+    await newSubject.save();
+    res.status(201).json({ message: 'Subject created', subject: newSubject });
+
+  } catch (err) {
+    res.status(500).json({ error: 'Server error', details: err.message });
+  }
 });
+
+// 🔁 Change status of a subject to "Active"
+router.patch('/activate/:subjectId', async (req, res) => {
+  try {
+    const { subjectId } = req.params;
+
+    const subject = await Subject.findOneAndUpdate(
+      { subjectId },
+      { status: 'Active' },
+      { new: true }
+    );
+
+    if (!subject) {
+      return res.status(404).json({ message: 'Subject not found' });
+    }
+
+    res.status(200).json({ message: 'Subject status updated to Active', subject });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error', details: err.message });
+  }
+});
+
+// 📥 Get all subject IDs
+router.get('/all-ids', async (req, res) => {
+  try {
+    const subjects = await Subject.find({}, 'subjectId name');
+    res.status(200).json(subjects);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error', details: err.message });
+  }
+});
+
+router.get('/active', async (req, res) => {
+  try {
+    const subjects = await Subject.find(
+      { status: 'Active' },
+      { subjectId: 1, status: 1, _id: 0 } // 👈 Only include subjectId and status
+    );
+    res.status(200).json(subjects);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error', details: err.message });
+  }
+});
+
+router.get('/un-active', async (req, res) => {
+  try {
+    const subjects = await Subject.find(
+      { status: 'Un Active' },
+      { subjectId: 1, status: 1, _id: 0 } // 👈 Only include subjectId and status
+    );
+    res.status(200).json(subjects);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error', details: err.message });
+  }
+});
+
   
 // PUT /api/subject/update/:subjectId
 router.put('/update/:subjectId', async (req, res) => {

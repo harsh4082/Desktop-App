@@ -8,7 +8,7 @@ const generateCustomId = (prefix = 'ID') => {
 
 // 1. Each selected question with its correctness and individual score
 const selectedQuestionSchema = new mongoose.Schema({
-  questionId: { type: mongoose.Schema.Types.ObjectId, ref: 'ExamQuestion', required: true },
+  questionId:  { type: String, required: true }, 
   selectedAnswerId: { type: String },
   isCorrect: { type: Boolean, default: false },
   score: { type: Number, default: 0 }, // 1 for correct, 0 for wrong
@@ -19,6 +19,7 @@ const studentExamSchema = new mongoose.Schema({
   subjectId: { type: String, required: true }, // Custom subject ID like "SUB-123456"
   examStartTime: { type: Date },
   examEndTime: { type: Date },
+  set: { type: String,},
   status: {
     type: String,
     enum: ['approved', 'rejected', 'pending', 'submitted', 'auto-submitted'],
