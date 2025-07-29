@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Department Details</title>
+  <link rel="stylesheet" href="../Css/style2.css" />
+  <link rel="stylesheet" href="../Css/style.css" />
+</head>
+<body>
+  <div id="menu-container"></div>
+
+  <div class="container">
+    <!-- 🔙 Back Button -->
+    <button onclick="goBack()" class="back-button">⬅ Back to Departments</button>
+
+    <h2 id="deptName"></h2>
+    <p><strong>HOD:</strong> <span id="hod"></span></p>
+    <h3>Classes</h3>
+    <ul id="classList"></ul>
+  </div>
+
+  <script src="../Js/departmentDetails.js"></script>
+  <script>
+    fetch('menu.html')
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById('menu-container').innerHTML = html;
+      });
+
+    function goBack() {
+      window.location.href = "viewDepartments.html";
+    }
+  </script>
+</body>
+</html>

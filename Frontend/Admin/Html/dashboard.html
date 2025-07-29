@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="../Css/style.css" />
+</head>
+<body>
+  <div id="menu-container"></div>
+
+  <div class="container">
+    <h1>Welcome to Admin Dashboard</h1><h1 id="adminName">Welcome</h1>
+    <p>Select an action:</p>
+    <ul>
+      <li><a href="addAdmin.html">➕ Add Admin</a></li>
+      <li><a href="addDepartment.html">🏫 Add Department</a></li>
+      <li><a href="viewDepartments.html">📂 View Departments</a></li>
+    </ul>
+  </div>
+
+  <script src="../Js/dashboard.js"></script>
+  <script>
+    fetch('menu.html')
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById('menu-container').innerHTML = html;
+      });
+  </script>
+</body>
+</html>

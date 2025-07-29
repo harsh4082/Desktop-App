@@ -111,5 +111,22 @@ router.get('/classes/:departmentId', async (req, res) => {
     }
 });
 
+router.get('/department/:departmentId', async (req, res) => {
+  try {
+    const department = await Department.findOne(
+      { departmentId: req.params.departmentId }
+    );
+
+    if (!department) {
+      return res.status(404).json({ error: 'Department not found' });
+    }
+
+    res.status(200).json(department);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error', details: err.message });
+  }
+});
+
+
 
 module.exports = router;

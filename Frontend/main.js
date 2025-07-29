@@ -12,8 +12,8 @@ function createMainWindow() {
       contextIsolation: false
     }
   });
+  mainWin.loadFile('Admin/Html/login.html');
 
-  mainWin.loadFile('index.html');
 }
 
 function createExamWindow() {

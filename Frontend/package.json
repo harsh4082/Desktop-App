@@ -3,11 +3,10 @@
     "version": "1.0.0",
     "main": "main.js",
     "scripts": {
-      "start": "electron ."
+        "start": "electron ."
     },
     "dependencies": {
-      "electron": "^29.0.0",
-      "axios": "^1.6.8"
+        "axios": "^1.11.0",
+        "electron": "^29.0.0"
     }
-  }
-  
+}

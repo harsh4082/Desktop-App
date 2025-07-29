@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Add Department</title>
+    <link rel="stylesheet" href="../Css/style.css" />
+</head>
+
+<body>
+    <div id="menu-container"></div>
+
+    <div class="container">
+        <h2>Add Department</h2>
+        <form id="deptForm">
+            <input type="text" id="name" placeholder="Department Name" required />
+            <input type="text" id="hod" placeholder="HOD Name" required />
+
+            <h3>Classes</h3>
+            <div id="classesContainer"></div>
+
+            <button type="button" id="addClassBtn">+ Add Class</button>
+            <br /><br />
+            <button type="submit">Add Department</button>
+            <p id="message"></p>
+        </form>
+
+    </div>
+
+    <script src="../Js/addDepartment.js"></script>
+    <script>
+        fetch('menu.html')
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById('menu-container').innerHTML = html;
+            });
+    </script>
+</body>
+
+</html>
