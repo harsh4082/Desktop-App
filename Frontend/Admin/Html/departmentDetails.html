@@ -5,6 +5,7 @@
   <title>Department Details</title>
   <link rel="stylesheet" href="../Css/style2.css" />
   <link rel="stylesheet" href="../Css/style.css" />
+  <link rel="stylesheet" href="../Css/departmentDetails.css" />
 </head>
 <body>
   <div id="menu-container"></div>
@@ -15,8 +16,30 @@
 
     <h2 id="deptName"></h2>
     <p><strong>HOD:</strong> <span id="hod"></span></p>
+
     <h3>Classes</h3>
     <ul id="classList"></ul>
+
+    <!-- ➕ Add Subject Button -->
+    <button class="add-subject-btn" onclick="toggleSubjectForm()">➕ Add Subject</button>
+
+    <!-- 📝 Subject Form (initially collapsed) -->
+    <form id="subjectForm" class="collapse-form">
+      <h3>Add Subject</h3>
+      <label>Subject Name: <input type="text" id="subjectName" required></label>
+      <label>Class:
+        <select id="classSelect" required></select>
+      </label>
+      <label>Teacher Name: <input type="text" id="teacherName" required></label>
+      <label>Sets (comma separated): <input type="text" id="setsInput" placeholder="e.g., Set 1, Set 2"></label>
+      <button type="submit">Submit</button>
+    </form>
+
+    <p id="message" class="message"></p>
+
+    <!-- 📚 Subjects List -->
+    <h3>Subjects</h3>
+    <div id="subjectCards" class="subject-cards-container"></div>
   </div>
 
   <script src="../Js/departmentDetails.js"></script>
@@ -29,6 +52,11 @@
 
     function goBack() {
       window.location.href = "viewDepartments.html";
+    }
+
+    function toggleSubjectForm() {
+      const form = document.getElementById('subjectForm');
+      form.classList.toggle('expand-form');
     }
   </script>
 </body>

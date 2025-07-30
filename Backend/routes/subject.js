@@ -48,7 +48,7 @@ router.post('/create', async (req, res) => {
       departmentId,
       totalStudents,
       sets,
-      status: 'x', // 🟡 Default status
+      status: 'Un Active', // 🟡 Default status
     });
 
     await newSubject.save();

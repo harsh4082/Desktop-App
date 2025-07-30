@@ -1,0 +1,140 @@
+.container {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0 0 12px rgba(0,0,0,0.1);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.back-button {
+  background-color: #555;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.back-button:hover {
+  background-color: #333;
+}
+
+h2, h3 {
+  color: #333;
+  margin-bottom: 8px;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.container ul li {
+  background-color: #fff;
+  margin: 5px 0;
+  padding: 10px;
+  border-radius: 8px;
+  border-left: 4px solid #007BFF;
+}
+
+.add-subject-btn {
+  margin-top: 20px;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.add-subject-btn:hover {
+  background-color: #0056b3;
+}
+
+/* Collapsible Form Styling */
+.collapse-form {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease, opacity 0.4s ease;
+  margin-top: 20px;
+  background-color: #e6f2ff;
+  border-radius: 10px;
+  padding: 0 15px;
+}
+
+.expand-form {
+  max-height: 500px;
+  opacity: 1;
+  padding: 15px;
+}
+
+#subjectForm label {
+  display: block;
+  margin: 10px 0;
+}
+
+#subjectForm input,
+#subjectForm select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+#subjectForm button {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+#subjectForm button:hover {
+  background-color: #218838;
+}
+
+.message {
+  margin-top: 10px;
+  font-weight: bold;
+  color: #006400;
+}
+
+.subject-cards-container {
+  margin-top: 30px;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.subject-card {
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-left: 5px solid #007BFF;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.subject-card h4 {
+  margin: 0 0 8px;
+  color: #007BFF;
+}
+
+.subject-card p {
+  margin: 4px 0;
+}
+
+.subject-card ul {
+  padding-left: 20px;
+  margin: 0;
+}
+
+.subject-card li {
+  font-size: 14px;
+}

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Add Students</title>
+  <link rel="stylesheet" href="../Css/addStudents.css" />
+  <link rel="stylesheet" href="../Css/style.css" />
+</head>
+
+<body>
+  <div id="menu-container"></div>
+
+  <div class="container">
+    <button class="back-button hidden" onclick="goBack()">⬅ Back</button>
+
+    <h2 id="pageTitle">Select Department</h2>
+
+    <div id="departmentCards" class="card-container"></div>
+
+    <div id="classContainer" class="hidden">
+      <h3>Select Class</h3>
+      <select id="classSelect"></select>
+    </div>
+
+    <div id="uploadContainer" class="hidden">
+      <h3>Upload Students CSV</h3>
+      <a href="../Assets/student_format.csv" download class="download-link">📥 Download CSV Format</a>
+      <input type="file" id="csvFile" accept=".csv" />
+      <button onclick="submitCSV()">✅ Upload</button>
+      <p id="responseMessage"></p>
+    </div>
+  </div>
+
+  <script src="../Js/addStudents.js"></script>
+  <script>
+    fetch('menu.html')
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById('menu-container').innerHTML = html;
+      });
+  </script>
+</body>
+
+</html>
